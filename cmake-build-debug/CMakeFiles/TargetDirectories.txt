@@ -1,0 +1,3 @@
+/Users/luqing/CLionProjects/h4d1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/luqing/CLionProjects/h4d1/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/luqing/CLionProjects/h4d1/cmake-build-debug/CMakeFiles/h4d1.dir
