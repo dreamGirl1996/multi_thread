@@ -26,21 +26,35 @@ std::mutex mtx;
  * count: number of total handled requests
  */
 struct handleCLientParameter {
-    ClientSocket * clientSocket;
     bool isLargeVariation;
     int count;
     //int bucketSize;
+    const char * hostname;
+    const char * port;
 };
 
 
+/*
+ * func params: a struct that includes a boolean indication variation type
+ * an integer for total number of requests
+ * an integer for number of buckets
+ */
+void * handleClient(void * para) {
+    struct handleCLientParameter * paraPtr = (handleCLientParameter *) para;
 
-void handleClient(void * para) {
-    handleClientParameter *(para);
+    // set up client socket
+    ClientSocket clientSocket(paraPtr->hostname, paraPtr->port);
+    clientSocket.setUp();
+
+    // TODO: handle invalid input
+    bool isLargeVariation = paraPtr->isLargeVariation;
+    int count = paraPtr->count;
+
     // create a message in a range according to delay variation type
     srand((unsigned)time(NULL));
     int delayVariation, bucketIdx;
     // small variation
-    if (!para.isLargeVariation) {
+    if (!paraPtr->isLargeVariation) {
         delayVariation = rand() % 3 + 1;
     }
     // large variation
@@ -50,17 +64,17 @@ void handleClient(void * para) {
     // TODO
     // assume bucket size is 512
     bucketIdx = rand() % 512;
-    string sendMsg = std::to_string(delayVariation) + "," + std::to_string(bucketIdx) + "\n";
+    std::string sendMsg = std::to_string(delayVariation) + "," + std::to_string(bucketIdx) + "\n";
     // send request to server
-    para.clientSocket->sendRequest(sendMsg);
+    clientSocket.sendRequest(sendMsg);
     // receive response from server
-    string recvMsg = para.clientSocket->receiveResponse();
+    std::string recvMsg = clientSocket.receiveResponse();
     // successfully receive the message
-    if (!recvMsg.size()) {
-        // update count of total handled number of requests
-        std::lock_guard(std::mutex) lck (mtx);
-        ++para.count;
-    }
+    // if (!recvMsg.size()) {
+    //     // update count of total handled number of requests
+    //     std::lock_guard(std::mutex) lck (mtx);
+    //     ++para.count;
+    // }
 }
 
 
@@ -68,10 +82,10 @@ void handleClient(void * para) {
 /*
  * func parameters: 3 parameters
  */
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
     // default parameters
     int num_requests = 10, bucket_size = 32;
-    string run_prog = "thread_pool";
+    std::string run_prog = "thread_pool";
     bool isLargeVariation = false;
 
     // print some hints
@@ -96,28 +110,20 @@ int main(int argc, char **argv) {
             std::endl;
             return EXIT_FAILURE;
         }
-        char input = tolower(argv[1]);
+        char input = tolower((int) argv[1]);
         if (input == 's') {
             // run server side codes
-            ServerSocket serverSocket();
+            ServerSocket serverSocket;
             serverSocket.setup();
             serverSocket.ServerAccept();
         }
         // run client codes
         else if (input == 'c') {
-            // set up client socket
-            ClientSocket clientSocket();
-            clientSocket.setUp();
-
-            // define arguments for handleclient function
             struct handleCLientParameter para;
-            para.clientSocket = &clientSocket;
-            // TODO: handle invalid input
-            para.isLargeVariation = stoi(argv[3]);
+            para.isLargeVariation = isLargeVariation;
             para.count = 0;
-            // TODO: handle invalid input
-            para.bucketSize = stoi
-
+            para.hostname = "vcm-13661.vm.duke.edu";
+            para.port = "12345";
             while(1) {
                 pthread_t pid;
                 pthread_create(&pid, NULL, handleClient, &para);

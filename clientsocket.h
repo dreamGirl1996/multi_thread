@@ -25,6 +25,8 @@ private:
 public:
     // constructor
     ClientSocket(): socket_fd(-1), host_info_list(nullptr), hostname(nullptr), port(nullptr) {}
+    ClientSocket(const char * hostname, const char * port): socket_fd(-1), host_info_list(nullptr), \
+    hostname(hostname), port(port) {}
     // destructor
     ~ClientSocket() {
         // free linked list that stores
@@ -72,7 +74,7 @@ void ClientSocket::setUp(){
         }
         // connect failed
         if (connect(socket_fd, p->ai_addr, p->ai_addrlen) == -1) {
-            close(socket_fd);
+            //close(socket_fd);
             std::perror("client side connection failed");
             continue;
         }

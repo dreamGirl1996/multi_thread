@@ -18,13 +18,20 @@
 #include <mutex>
 #include "serversocket.h"
 
-
+#define BUFFER_SIZE 10
 #define NUM_THREADS 100
 //using namespace std;
 
 std::mutex mtx;
 
 
+struct clientObject
+{
+    int delay_count;
+    int bucket_item;
+    int socket_fd;
+    int thread_id;
+};
 
 
 /*
@@ -55,6 +62,9 @@ void *PrintHello(void *threadarg)
 	return NULL;
     }
 }*/
+
+
+
 void *ClientSend(void *threadarg)
 {
     /*try {
@@ -63,17 +73,45 @@ void *ClientSend(void *threadarg)
         struct server_bucket *my_data;
 
         my_data = (struct server_bucket *) threadarg;
+
+        // char buffer[50];
+        // memset(buffer, 0, 50);
+        // char char_delay_count[50];
+        // sprintf(char_delay_count,"%d",my_data->delay_count);
+        // char char_bucket_item[50];
+        // sprintf(char_bucket_item,"%d",my_data->bucket_item);
+        // strcpy(buffer,char_delay_count);
+        // strcat(buffer,",");
+        // strcat(buffer,char_bucket_item);
+        // strcat(buffer,",");
+        std::string sendMsg = std::to_string(my_data->delay_count) + "," + \
+        std::to_string(my_data->bucket_item) + ",";
+
+        std::cout << "client send buffer " << sendMsg << std::endl;
+        send(my_data->socket_fd, sendMsg.c_str(), sendMsg.size(), 0);
+
         //send(my_data->socket_fd,my_data, sizeof(my_data),0);
-        send(my_data->socket_fd,&my_data->delay_count,sizeof(int), 0);
-        send(my_data->socket_fd,&my_data->bucket_item,sizeof(int), 0);
+        //send(my_data->socket_fd,&my_data->delay_count,sizeof(int), 0);
+        //send(my_data->socket_fd,&my_data->bucket_item,sizeof(int), 0);
 
         double success=0;
         recv(my_data->socket_fd,&success, sizeof(int),0);
+
+    try {
+        // using a local lock_guard to lock mtx guarantees unlocking on destruction / exception:
+        std::lock_guard<std::mutex> lck (mtx);
         std::cout<<"new item value after update in client "<<success<<std::endl;
 
         std::cout << "delay_count : " << my_data->delay_count ;
         std::cout << " bucket_item : " << my_data->bucket_item << std::endl;
         std::cout << "id is "<<my_data->thread_id<<std::endl;
+        std::cout<<"------------"<<std::endl;
+    }
+    catch (std::logic_error&) {
+        std::cout << "[exception caught]\n";
+    }
+
+
 
         pthread_exit(NULL);
         return NULL;
@@ -124,19 +162,18 @@ int main(int argc, char *argv[]){
     }
 
     pthread_t threads[NUM_THREADS];
-    struct server_bucket obj[NUM_THREADS];
+    struct clientObject obj;
     int rc;
     int i;
 
     for( i=0; i < NUM_THREADS; i++ ){
-        std::cout <<"main() : creating thread, " << i << std::endl;
-        obj[i].delay_count = delay_count;
-        obj[i].bucket_item = bucket_item;
-        obj[i].socket_fd = socket_fd;
-        obj[i].thread_id =i;
+        obj.delay_count = delay_count;
+        obj.bucket_item = bucket_item;
+        obj.socket_fd = socket_fd;
+        obj.thread_id =i;
         //td[i].message = (char*)"This is message";
         rc = pthread_create(&threads[i], NULL,
-                            ClientSend, (void *)&obj[i]);
+                            ClientSend, (void *)&obj);
         if (rc){
             std::cout << "Error:unable to create thread," << rc << std::endl;
             exit(-1);

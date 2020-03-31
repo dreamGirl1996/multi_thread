@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <mutex>
 #include <sys/time.h>
+#define BUFFER_SIZE 10
 
 
 std::mutex mtx;
@@ -48,9 +49,21 @@ double delay(int req_delay) {
         elapsed_seconds = (check.tv_sec + (check.tv_usec/1000000.0)) - \
         (start.tv_sec + (start.tv_usec/1000000.0));
     } while (elapsed_seconds < req_delay);
+    std::cout<<"elapsed_second "<<elapsed_seconds<<std::endl;
     return elapsed_seconds;
 }
 
+std::vector<int> char_to_int(char * buffer,const char *delim){
+    std::vector<int> ans;
+    char *p = strtok(buffer,delim);
+    while(p) {
+        int x;
+        sscanf(p, "%d", &x);
+        ans.push_back(x); //存入结果数组
+        p = strtok(NULL, delim);
+    }
+    return ans;
+}
 
 void* handle_prethread(void *serverBucket){
     //try {
@@ -65,12 +78,22 @@ void* handle_prethread(void *serverBucket){
 
     int i= serverBucket1->client_fd; //void *转int
 
+    char buffer[BUFFER_SIZE];
+    memset(buffer, 0, BUFFER_SIZE);
+    recv(i,buffer, sizeof(buffer),0);
     //recv(i,serverBucket1, sizeof(serverBucket1),0);
     //delay_count=serverBucket1->delay_count;
     //bucket_item=serverBucket1->bucket_item;
+    std::vector<int> recv_vec_buf=char_to_int(buffer,",");
+    std::cout << "recv_vec_buf: \n"; 
+    for (size_t i = 0; i < recv_vec_buf.size(); i++) {
+        std::cout << recv_vec_buf[i] << "\n";
+    }
+    delay_count=recv_vec_buf[0];
+    bucket_item=recv_vec_buf[1];
 
-    recv(i,&delay_count, sizeof(delay_count),0);
-    recv(i,&bucket_item, sizeof(bucket_item),0);
+    //recv(i,&delay_count, sizeof(delay_count),0);
+    //recv(i,&bucket_item, sizeof(bucket_item),0);
 
     try {
         // using a local lock_guard to lock mtx guarantees unlocking on destruction / exception:
