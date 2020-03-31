@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/h4d1.dir/client_test.cpp.o"
   "CMakeFiles/h4d1.dir/main.cpp.o"
   "h4d1"
   "h4d1.pdb"

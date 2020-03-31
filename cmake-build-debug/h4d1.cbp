@@ -83,10 +83,16 @@
 		<Unit filename="/Users/luqing/CLionProjects/h4d1/GeneralException.h">
 			<Option target="h4d1"/>
 		</Unit>
+		<Unit filename="/Users/luqing/CLionProjects/h4d1/client_test.cpp">
+			<Option target="h4d1"/>
+		</Unit>
 		<Unit filename="/Users/luqing/CLionProjects/h4d1/main.cpp">
 			<Option target="h4d1"/>
 		</Unit>
 		<Unit filename="/Users/luqing/CLionProjects/h4d1/serversocket.h">
+			<Option target="h4d1"/>
+		</Unit>
+		<Unit filename="/Users/luqing/CLionProjects/h4d1/threadpool.h">
 			<Option target="h4d1"/>
 		</Unit>
 		<Unit filename="/Users/luqing/CLionProjects/h4d1/CMakeLists.txt">

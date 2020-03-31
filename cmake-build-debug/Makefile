@@ -123,6 +123,33 @@ h4d1/fast:
 	$(MAKE) -f CMakeFiles/h4d1.dir/build.make CMakeFiles/h4d1.dir/build
 .PHONY : h4d1/fast
 
+client_test.o: client_test.cpp.o
+
+.PHONY : client_test.o
+
+# target to build an object file
+client_test.cpp.o:
+	$(MAKE) -f CMakeFiles/h4d1.dir/build.make CMakeFiles/h4d1.dir/client_test.cpp.o
+.PHONY : client_test.cpp.o
+
+client_test.i: client_test.cpp.i
+
+.PHONY : client_test.i
+
+# target to preprocess a source file
+client_test.cpp.i:
+	$(MAKE) -f CMakeFiles/h4d1.dir/build.make CMakeFiles/h4d1.dir/client_test.cpp.i
+.PHONY : client_test.cpp.i
+
+client_test.s: client_test.cpp.s
+
+.PHONY : client_test.s
+
+# target to generate assembly for a file
+client_test.cpp.s:
+	$(MAKE) -f CMakeFiles/h4d1.dir/build.make CMakeFiles/h4d1.dir/client_test.cpp.s
+.PHONY : client_test.cpp.s
+
 main.o: main.cpp.o
 
 .PHONY : main.o
@@ -159,6 +186,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... h4d1"
+	@echo "... client_test.o"
+	@echo "... client_test.i"
+	@echo "... client_test.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

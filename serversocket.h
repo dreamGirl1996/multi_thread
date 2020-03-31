@@ -10,6 +10,9 @@
 #include <unistd.h>
 #include <vector>
 #include <netdb.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <cstring>
 #include "GeneralException.h"
 
 class ServerSocket {
