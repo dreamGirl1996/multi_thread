@@ -16,6 +16,7 @@
 #include <thread>
 #include <pthread.h>
 #include <mutex>
+#include "serversocket.h"
 
 
 #define NUM_THREADS 100
@@ -23,12 +24,9 @@
 
 std::mutex mtx;
 
-struct client_obj{
-    int delay_count;
-    int bucket_item;
-    int socket_fd;
-    int thread_id;
-};
+
+
+
 /*
 void *PrintHello(void *threadarg)
 {
@@ -62,16 +60,16 @@ void *ClientSend(void *threadarg)
     /*try {
         // using a local lock_guard to lock mtx guarantees unlocking on destruction / exception:
         std::lock_guard<std::mutex> lck (mtx);*/
-        struct client_obj *my_data;
+        struct server_bucket *my_data;
 
-        my_data = (struct client_obj *) threadarg;
-        //send(my_data->socket_fd,&my_data, sizeof(my_data),0);
+        my_data = (struct server_bucket *) threadarg;
+        //send(my_data->socket_fd,my_data, sizeof(my_data),0);
         send(my_data->socket_fd,&my_data->delay_count,sizeof(int), 0);
         send(my_data->socket_fd,&my_data->bucket_item,sizeof(int), 0);
 
-        int success=0;
+        double success=0;
         recv(my_data->socket_fd,&success, sizeof(int),0);
-        std::cout<<"succ "<<success<<std::endl;
+        std::cout<<"new item value after update in client "<<success<<std::endl;
 
         std::cout << "delay_count : " << my_data->delay_count ;
         std::cout << " bucket_item : " << my_data->bucket_item << std::endl;
@@ -126,7 +124,7 @@ int main(int argc, char *argv[]){
     }
 
     pthread_t threads[NUM_THREADS];
-    struct client_obj obj[NUM_THREADS];
+    struct server_bucket obj[NUM_THREADS];
     int rc;
     int i;
 

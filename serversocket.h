@@ -15,6 +15,23 @@
 #include <cstring>
 #include "GeneralException.h"
 
+/*struct client_obj{
+    int delay_count;
+    int bucket_item;
+    int socket_fd;
+    int thread_id;
+};*/
+
+struct server_bucket{
+    int bucket_size=0;
+    int client_fd;//client
+    std::vector<double> bucket;
+    int delay_count;
+    int bucket_item;
+    int socket_fd;//server
+    int thread_id;
+};
+
 class ServerSocket {
 public:
     int socket_fd;  // listen on sock_fd, new connection on new_fd

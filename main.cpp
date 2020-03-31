@@ -13,26 +13,10 @@
 #include <mutex>
 #include <sys/time.h>
 
-/*struct client_obj{
-    int delay_count;
-    int bucket_item;
-    int socket_fd;
-    int thread_id;
-    };*/
+
 std::mutex mtx;
 
-void delay(int req_delay) {
-    struct timeval start, check, end;
-    double elapsed_seconds;
-    gettimeofday(&start, NULL);
-    do {
-        gettimeofday(&check, NULL);
-        elapsed_seconds = (check.tv_sec + (check.tv_usec/1000000.0)) - \
-        (start.tv_sec + (start.tv_usec/1000000.0));
-    } while (elapsed_seconds < req_delay);
-}
-
-void* handle(void *client_fd){
+/*void* handle(void *client_fd){
     //try {
         // using a local lock_guard to lock mtx guarantees unlocking on destruction / exception:
         //std::lock_guard<std::mutex> lck (mtx);
@@ -53,7 +37,65 @@ void* handle(void *client_fd){
        // std::cout << "[exception caught]\n";
 	//return NULL;
     //}
+}*/
+
+double delay(int req_delay) {
+    struct timeval start, check;
+    double elapsed_seconds;
+    gettimeofday(&start, NULL);
+    do {
+        gettimeofday(&check, NULL);
+        elapsed_seconds = (check.tv_sec + (check.tv_usec/1000000.0)) - \
+        (start.tv_sec + (start.tv_usec/1000000.0));
+    } while (elapsed_seconds < req_delay);
+    return elapsed_seconds;
 }
+
+
+void* handle_prethread(void *serverBucket){
+    //try {
+    // using a local lock_guard to lock mtx guarantees unlocking on destruction / exception:
+    //std::lock_guard<std::mutex> lck (mtx);
+    int delay_count=0;
+    int bucket_item=0;
+    //struct client_obj *clientObj;
+    //recv(client_fd,&clientObj, sizeof(clientObj),0);
+    struct server_bucket *serverBucket1;
+    serverBucket1=(struct server_bucket*)serverBucket;
+
+    int i= serverBucket1->client_fd; //void *转int
+
+    //recv(i,serverBucket1, sizeof(serverBucket1),0);
+    //delay_count=serverBucket1->delay_count;
+    //bucket_item=serverBucket1->bucket_item;
+
+    recv(i,&delay_count, sizeof(delay_count),0);
+    recv(i,&bucket_item, sizeof(bucket_item),0);
+
+    try {
+        // using a local lock_guard to lock mtx guarantees unlocking on destruction / exception:
+        std::lock_guard<std::mutex> lck (mtx);
+        double new_delay=delay(delay_count);
+        std::cout<<"caculate delay "<<new_delay<<std::endl;
+        serverBucket1->bucket[bucket_item]+=new_delay;
+        std::cout<<"new item after update in main "<<serverBucket1->bucket[bucket_item]<<std::endl;
+        std::cout<<"------------"<<std::endl;
+    }
+    catch (std::logic_error&) {
+        std::cout << "[exception caught]\n";
+    }
+
+
+    double succ=serverBucket1->bucket[bucket_item];
+    send(i,&succ, sizeof(succ),0);
+    return NULL;
+    // }
+    //catch (std::logic_error&) {
+    // std::cout << "[exception caught]\n";
+    //return NULL;
+    //}
+}
+
 
 int main(int argc, char **argv) {
 
@@ -66,7 +108,7 @@ int main(int argc, char **argv) {
 	std::cout<<bucket_size<<std::endl;
 	std::cout<<"success"<<std::endl;
     }
-    std::vector<double> bucket(bucket_size,0);
+
 
     try {
         server.setup();
@@ -83,12 +125,21 @@ int main(int argc, char **argv) {
     catch (GeneralException &e) {
         std::cout << e.what() << std::endl;
     }
+
+    struct server_bucket serverBucket;
+    serverBucket.bucket_size=bucket_size;
+    for(int i=0;i<bucket_size;++i){
+        serverBucket.bucket.push_back(0);
+    }
+    serverBucket.client_fd=client_fd;
+
     while (n<100) {
 
         if (client_fd > 0) {
             pthread_t pId;
             int ret;
-            ret = pthread_create(&pId,NULL,handle,(void *)&client_fd);
+            //ret = pthread_create(&pId,NULL,handle,(void *)&client_fd);
+            ret = pthread_create(&pId,NULL,handle_prethread,(void *)&serverBucket);
             if(ret != 0)
             {
                 printf("create pthread error!\n");

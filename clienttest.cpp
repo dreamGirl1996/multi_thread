@@ -16,11 +16,54 @@
 #include <cstdio>
 #include <cctype>
 #include <iostream>
+#include <string>
 
+std::mutex mtx;
+
+/*
+ * clientSocketFD: file descriptor of socket on the client side
+ * isLargeVariation: 0 for small delay variation(1-3s), 1 for large(1-20s)
+ * count: number of total handled requests
+ */
 struct handleCLientParameter {
-    int clientSocketFD;
+    ClientSocket * clientSocket;
     bool isLargeVariation;
+    int count;
+    //int bucketSize;
 };
+
+
+
+void handleClient(void * para) {
+    handleClientParameter *(para);
+    // create a message in a range according to delay variation type
+    srand((unsigned)time(NULL));
+    int delayVariation, bucketIdx;
+    // small variation
+    if (!para.isLargeVariation) {
+        delayVariation = rand() % 3 + 1;
+    }
+    // large variation
+    else {
+        delayVariation = rand() % 20 + 1;
+    }
+    // TODO
+    // assume bucket size is 512
+    bucketIdx = rand() % 512;
+    string sendMsg = std::to_string(delayVariation) + "," + std::to_string(bucketIdx) + "\n";
+    // send request to server
+    para.clientSocket->sendRequest(sendMsg);
+    // receive response from server
+    string recvMsg = para.clientSocket->receiveResponse();
+    // successfully receive the message
+    if (!recvMsg.size()) {
+        // update count of total handled number of requests
+        std::lock_guard(std::mutex) lck (mtx);
+        ++para.count;
+    }
+}
+
+
 
 /*
  * func parameters: 3 parameters
@@ -38,10 +81,12 @@ int main(int argc, char **argv) {
     std::cout << "For the client side, the second parameter is the number of requests." << std::endl;
     std::cout << "For the server side, as second parameter enter p for opening a thread pool or t to create "
                  "thread per request." << std::endl;
-    std::cout << "For the client side, as third parameter enter the variation of delay,  for small (1-3s) and l for "
+    std::cout << "For the client side, as third parameter enter the variation of delay, 0 for small (1-3s) and 1 for "
                  "large (1-20s)." << std::endl;
     std::cout << "For the server side, as third parameter enter the bucket size. 0 for 32 buckets, 1 for 128 buckets, "
-                 "2 for 512 buckets, 3 for 2048 buckets."<< std::endl;
+                 "2 for 512 buckets, 3 for 2048 buckets." << std::endl;
+//    std::cout << "For the client side, as fourth parameter enter the server side bucket size. 0 for 32 buckets, 1 for 128"
+//                 "buckets, 2 for 512 buckets, 3 for 2048 buckets." << std::endl;
 
     // run client side codes
     if (argc == 4) {
@@ -54,17 +99,26 @@ int main(int argc, char **argv) {
         char input = tolower(argv[1]);
         if (input == 's') {
             // run server side codes
+            ServerSocket serverSocket();
+            serverSocket.setup();
+            serverSocket.ServerAccept();
         }
         // run client codes
         else if (input == 'c') {
-            // TODO: set up client socket
+            // set up client socket
             ClientSocket clientSocket();
             clientSocket.setUp();
 
+            // define arguments for handleclient function
+            struct handleCLientParameter para;
+            para.clientSocket = &clientSocket;
+            // TODO: handle invalid input
+            para.isLargeVariation = stoi(argv[3]);
+            para.count = 0;
+            // TODO: handle invalid input
+            para.bucketSize = stoi
+
             while(1) {
-                struct handleCLientParameter para;
-                para.clientSocketFD = clientSocket.socket_fd;
-                para.isLargeVariation = argv[3];
                 pthread_t pid;
                 pthread_create(&pid, NULL, handleClient, &para);
             }

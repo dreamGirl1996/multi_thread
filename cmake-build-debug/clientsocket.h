@@ -40,9 +40,9 @@ public:
     // setup as client
     void setUp();
     // send request
-    void sendRequest(std::string msg);
+    void sendRequest(string msg);
     // receive response
-    std::string receiveResponse();
+    void handleResponse();
 };
 
 
@@ -90,7 +90,7 @@ void ClientSocket::setUp(){
 /*
  * send request to server side
  */
-void ClientSocket::sendRequest(std::string msg) {
+void ClientSocket::sendRequest(std::string& msg) {
     // send it to the server
     if (send(socket_fd, msg.c_str(), msg.size(), 0) == -1) {
         std::perror("failed to send message in client side");
@@ -102,15 +102,15 @@ void ClientSocket::sendRequest(std::string msg) {
 /*
  * handle the response received from the server side
  */
-std::string ClientSocket::receiveResponse() {
-    std::string res = "";
+string ClientSocket::handleResponse() {
+    string res = "";
     char recvBuf[1000];
     // recv failed
     if (recv(socket_fd, recvBuf, 1000, 0) == -1) {
         std::perror("failed to receive message from server side");
+        res = recvBuf;
     }
     // recv succeeds
-    res = recvBuf;
     return res;
 }
 #endif
