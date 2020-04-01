@@ -85,12 +85,9 @@ void* handle_prethread(void *serverBucket){
     //delay_count=serverBucket1->delay_count;
     //bucket_item=serverBucket1->bucket_item;
     std::vector<int> recv_vec_buf=char_to_int(buffer,",");
-    std::cout << "recv_vec_buf: \n"; 
-    for (size_t i = 0; i < recv_vec_buf.size(); i++) {
-        std::cout << recv_vec_buf[i] << "\n";
-    }
     delay_count=recv_vec_buf[0];
     bucket_item=recv_vec_buf[1];
+    std::cout<<"vect "<<delay_count<<" "<<bucket_item<<std::endl;
 
     //recv(i,&delay_count, sizeof(delay_count),0);
     //recv(i,&bucket_item, sizeof(bucket_item),0);

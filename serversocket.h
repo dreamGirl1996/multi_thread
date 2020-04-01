@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <cstring>
 #include "GeneralException.h"
+#include "utils.h"
 
 /*struct client_obj{
     int delay_count;
@@ -42,12 +43,14 @@ public:
     ServerSocket(): socket_fd(0), host_info_list(nullptr), hostname(nullptr),
                     port(nullptr) {}
     ~ServerSocket() {
-        if (socket_fd == 0) {
-            close(socket_fd);
-        }
-        if (host_info_list != nullptr) {
-            free(host_info_list);
-        }
+        // if (socket_fd == 0) {
+        //     close(socket_fd);
+        // }
+        closeSockfd(socket_fd);
+        // if (host_info_list != nullptr) {
+        //     free(host_info_list);
+        // }
+        freeSockAddrList(host_info_list);
     }
 
     virtual void setup();
@@ -57,7 +60,7 @@ public:
 };
 
 void ServerSocket::closeSocket() {
-    close(this->socket_fd);
+    closeSockfd(socket_fd);
 }
 
 

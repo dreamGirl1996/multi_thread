@@ -11,8 +11,9 @@
 #include <cstring>
 #include <string>
 #include "GeneralException.h"
+#include "utils.h"
 
-
+#define BUFFER_SIZE 1024
 
 class ClientSocket {
 private:
@@ -30,14 +31,16 @@ public:
     // destructor
     ~ClientSocket() {
         // free linked list that stores
-        if (host_info_list != nullptr) {
-            freeaddrinfo(host_info_list);
-        }
+        // if (host_info_list != nullptr) {
+        //     freeaddrinfo(host_info_list);
+        // }
+        freeSockAddrList(host_info_list);
         // if error occurs
-        if (socket_fd == -1) {
-            close(socket_fd);
-            socket_fd = -1;
-        }
+        // if (socket_fd == -1) {
+        //     close(socket_fd);
+        //     socket_fd = -1;
+        // }
+        closeSockfd(socket_fd);
     }
     // setup as client
     void setUp();
@@ -74,7 +77,7 @@ void ClientSocket::setUp(){
         }
         // connect failed
         if (connect(socket_fd, p->ai_addr, p->ai_addrlen) == -1) {
-            //close(socket_fd);
+            closeSockfd(socket_fd);
             std::perror("client side connection failed");
             continue;
         }
@@ -83,7 +86,7 @@ void ClientSocket::setUp(){
     }
     // check if no address found
     if (p == NULL) {
-        close(socket_fd);
+        closeSockfd(socket_fd);
         throw GeneralException("found no IP address in the linked list");
     }
 }
@@ -95,8 +98,7 @@ void ClientSocket::setUp(){
 void ClientSocket::sendRequest(std::string msg) {
     // send it to the server
     if (send(socket_fd, msg.c_str(), msg.size(), 0) == -1) {
-        std::perror("failed to send message in client side");
-        close(socket_fd);
+        throw GeneralException("failed to send message in client side");
     }
 }
 
@@ -108,8 +110,8 @@ std::string ClientSocket::receiveResponse() {
     std::string res = "";
     char recvBuf[1000];
     // recv failed
-    if (recv(socket_fd, recvBuf, 1000, 0) == -1) {
-        std::perror("failed to receive message from server side");
+    if (recv(socket_fd, recvBuf, BUFFER_SIZE, 0) == -1) {
+        throw GeneralException("failed to receive message from server side");
     }
     // recv succeeds
     res = recvBuf;
