@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <mutex>
 #include <sys/time.h>
+#include "utils.h"
 #define BUFFER_SIZE 10
 
 
@@ -40,18 +41,6 @@ std::mutex mtx;
     //}
 }*/
 
-double delay(int req_delay) {
-    struct timeval start, check;
-    double elapsed_seconds;
-    gettimeofday(&start, NULL);
-    do {
-        gettimeofday(&check, NULL);
-        elapsed_seconds = (check.tv_sec + (check.tv_usec/1000000.0)) - \
-        (start.tv_sec + (start.tv_usec/1000000.0));
-    } while (elapsed_seconds < req_delay);
-    std::cout<<"elapsed_second "<<elapsed_seconds<<std::endl;
-    return elapsed_seconds;
-}
 
 std::vector<int> char_to_int(char * buffer,const char *delim){
     std::vector<int> ans;

@@ -64,14 +64,14 @@ void ClientSocket::setUp(){
     host_info.ai_socktype = SOCK_STREAM; // TCP socket
     host_info.ai_flags = AI_PASSIVE;
 
-    if (status = getaddrinfo(hostname, port, &host_info, &host_info_list) != 0) {
+    if ((status = getaddrinfo(hostname, port, &host_info, &host_info_list)) != 0) {
         throw GeneralException("cannot getaddrinfo in client setup");
     }
 
     // loop through all the IPs in the linked list and connect to the first available one
     for (p = host_info_list; p != NULL; p = p->ai_next) {
         // create socket failed
-        if (socket_fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol) == -1) {
+        if ((socket_fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             std::perror("client side create socket failed");
             continue;
         }

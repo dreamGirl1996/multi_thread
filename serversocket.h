@@ -87,7 +87,7 @@ void ServerSocket::setup() {
         throw GeneralException("ServerSocket: setsockopt");
     }
     status =
-            ::bind(socket_fd, host_info_list->ai_addr, host_info_list->ai_addrlen);
+            bind(socket_fd, host_info_list->ai_addr, host_info_list->ai_addrlen);
     if (status!=0) {
         closeSocket();
         throw GeneralException("bind failure");

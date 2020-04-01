@@ -17,7 +17,7 @@
 #include <cctype>
 #include <iostream>
 #include <string>
-#include <utils.h>
+#include "utils.h"
 
 std::mutex mtx;
 
@@ -40,7 +40,7 @@ std::mutex mtx;
  * an integer for total number of requests
  * an integer for number of buckets
  */
-void * handleClient(bool isLargeVariation, const char * hostname, const char * port) {
+void handleClient(bool isLargeVariation, const char * hostname, const char * port) {
     // struct handleCLientParameter * paraPtr = (handleCLientParameter *) para;
 
     // set up client socket
@@ -52,7 +52,6 @@ void * handleClient(bool isLargeVariation, const char * hostname, const char * p
     // int count = paraPtr->count;
 
     // create a message in a range according to delay variation type
-    srand((unsigned)time(NULL));
     int delayVariation, bucketIdx;
     // small variation
     if (!isLargeVariation) {
@@ -64,11 +63,17 @@ void * handleClient(bool isLargeVariation, const char * hostname, const char * p
     }
     // TODO
     // assume bucket size is 512
-    bucketIdx = rand() % 512;
+    bucketIdx = rand() % 32;
     std::string sendMsg = std::to_string(delayVariation) + "," + std::to_string(bucketIdx) + "\n";
     // send request to server
     clientSocket.sendRequest(sendMsg);
-    std::cout << "client send msg: " << sendMsg;
+    try {
+        std::lock_guard<std::mutex> lck(mtx);
+        std::cout << "client send msg: " << sendMsg;
+    }
+    catch(GeneralException & e) {
+        throw GeneralException("lock guard failed.");
+    } 
     // receive response from server
     std::string recvMsg = clientSocket.receiveResponse();
     // successfully receive the message
@@ -80,12 +85,7 @@ void * handleClient(bool isLargeVariation, const char * hostname, const char * p
 }
 
 
-int prepareServer(ServerSocket & serverSocket, std::vector<double> & bucket, int bucket_size) {
-    serverSocket.hostname = nullptr;
-    serverSocket.port = "12345";
-
-    serverSocket.setup(); 
-    
+int prepareServer(ServerSocket & serverSocket, std::vector<double> & bucket, int bucket_size) {    
     int client_fd = serverSocket.ServerAccept();
 
     if (client_fd < 0) {
@@ -134,19 +134,24 @@ void handleServer(int& request_id, int client_fd, int & count, std::vector<doubl
     // parse string
     std::string whole, first, last;
     std::string delimiter = "\n";
-    std::string whole = recvMsg.substr(0, recvMsg.find(delimiter));
+    whole = recvMsg.substr(0, recvMsg.find(delimiter));
     delimiter = ",";
     first = whole.substr(0, whole.find(delimiter));
-    last = whole.substr(whole.find(delimiter));
-    int bucketIdx;
-    double delay;
-    delay = std::stoi(first);
+    last = whole.substr(whole.find(delimiter) + 1);
+    int bucketIdx = 0;
+    double delayTm = 0;
+    // std::cout << "11111111111111\n";
+    delayTm = std::stoi(first);
+    // std::cout << "22222222222222\n";
     bucketIdx = std::stoi(last);
+    // std::cout << "33333333333333\n";
+
+    delay(delayTm);
 
     // update bucket and increase count
     try {
         std::lock_guard<std::mutex> lck(mtx);
-        bucket[bucketIdx] += delay;
+        bucket[bucketIdx] += delayTm;
         ++count;
         // print modified buckets and current delay count
         std::cout << "Request ID: " << request_id << "count: " << count << "   " << \
@@ -166,10 +171,12 @@ void handleServer(int& request_id, int client_fd, int & count, std::vector<doubl
 /*
  * func parameters: 3 parameters
  */
-int main(int argc, char *argv[]) {
+int main(int argc, char **argv) {
+    srand((unsigned)time(NULL));
     // default parameters
-    int num_requests = 10, bucket_size = 32;
-    bool isThreadPool = false;
+    // int num_requests = 10;
+    int bucket_size = 32;
+    // bool isThreadPool = false;
     bool isLargeVariation = false;
 
     // print some hints
@@ -194,7 +201,7 @@ int main(int argc, char *argv[]) {
             std::endl;
             return EXIT_FAILURE;
         }
-        char checkServerOrClient = tolower((int) argv[1]);
+        char checkServerOrClient = tolower((int) *argv[1]);
         if (checkServerOrClient == 's') {
             // run server side codes
             std::string checkThreadPool = argv[2];
@@ -218,10 +225,13 @@ int main(int argc, char *argv[]) {
                     return EXIT_FAILURE;
             }
             if (checkThreadPool == "0") {
-                isThreadPool = false;
                 ServerSocket serverSocket;
+                serverSocket.hostname = nullptr;
+                serverSocket.port = "12345";
+                serverSocket.setup(); 
+
                 std::vector<double> bucket;
-                int count = 0, request_id;
+                int count = 0, request_id = 0;
                 while (1) {
                     int client_fd = -1;
                     try {
@@ -235,7 +245,9 @@ int main(int argc, char *argv[]) {
                     }
                     try {
                         ++request_id;
-                        handleServer(request_id, client_fd, count, bucket);
+                        std::thread th(handleServer, std::ref(request_id), 
+                        client_fd, std::ref(count), std::ref(bucket));
+                        th.detach();
                     }
                     catch (GeneralException & e) {
                         closeSockfd(client_fd);
@@ -244,7 +256,7 @@ int main(int argc, char *argv[]) {
                 }
             }
             else if (checkThreadPool == "1") {
-                isThreadPool = true;
+                
             }
             else {
                 std::cerr << "Invalid parameter [3], please enter 1 to run thread pool or 0 to run thread per request.\n";
@@ -261,7 +273,7 @@ int main(int argc, char *argv[]) {
             // para.port = "12345";
             const char * hostname = "vcm-13661.vm.duke.edu";
             const char * port = "12345";
-            while (1) {
+            for (int i = 0; i < 500; i++) {
                 // pthread_t pid;
                 try {
                     std::thread th(handleClient, isLargeVariation, hostname, port);
@@ -286,4 +298,4 @@ int main(int argc, char *argv[]) {
         // run server codes
     }
 
-};
+}

@@ -1,12 +1,14 @@
 CCFLAGS=--std=c++11 -pedantic -Wall -Werror -ggdb3 -pthread
 
-TARGETS= main client_test
+# TARGETS= main client_test my_test
+TARGETS= my_test
 
 all: $(TARGETS)
 clean:
 	rm -f $(TARGETS)
-client_test: client_test.cpp
+# client_test: client_test.cpp
+# 	g++ -g -o $@ $(CCFLAGS) $?
+# main: main.cpp
+# 	g++ -g -o $@ $(CCFLAGS) $?
+my_test: clienttest.cpp
 	g++ -g -o $@ $(CCFLAGS) $?
-main: main.cpp
-	g++ -g -o $@ $(CCFLAGS) $?
-
