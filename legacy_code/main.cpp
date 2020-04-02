@@ -12,35 +12,26 @@
 #include <pthread.h>
 #include <mutex>
 #include <sys/time.h>
+#include "myqueue.h"
 #include "utils.h"
 #define BUFFER_SIZE 10
 
 
+
 std::mutex mtx;
 
-/*void* handle(void *client_fd){
-    //try {
-        // using a local lock_guard to lock mtx guarantees unlocking on destruction / exception:
-        //std::lock_guard<std::mutex> lck (mtx);
-        int delay_count=0;
-        int bucket_item=0;
-        //struct client_obj *clientObj;
-        //recv(client_fd,&clientObj, sizeof(clientObj),0);
-        int i=*(int*)client_fd; //void *转int
-
-        recv(i,&delay_count, sizeof(delay_count),0);
-        recv(i,&bucket_item, sizeof(bucket_item),0);
-        std::cout<<"delay_count"<<delay_count<<std::endl;
-        int succ=2;
-        send(i,&succ, sizeof(succ),0);
-        return NULL;
-   // }
-    //catch (std::logic_error&) {
-       // std::cout << "[exception caught]\n";
-	//return NULL;
-    //}
-}*/
-
+/*double delay(int req_delay) {
+    struct timeval start, check;
+    double elapsed_seconds;
+    gettimeofday(&start, NULL);
+    do {
+        gettimeofday(&check, NULL);
+        elapsed_seconds = (check.tv_sec + (check.tv_usec/1000000.0)) - \
+        (start.tv_sec + (start.tv_usec/1000000.0));
+    } while (elapsed_seconds < req_delay);
+    std::cout<<"elapsed_second "<<elapsed_seconds<<std::endl;
+    return elapsed_seconds;
+    }*/
 
 std::vector<int> char_to_int(char * buffer,const char *delim){
     std::vector<int> ans;
@@ -105,6 +96,15 @@ void* handle_prethread(void *serverBucket){
     //}
 }
 
+void *handle_thread_pool(void * serverBucket){
+    while (true){
+        int pool_client=dequeue();
+        if(pool_client){
+            handle_prethread(serverBucket);
+        }
+    }
+}
+
 
 int main(int argc, char **argv) {
 
@@ -119,6 +119,7 @@ int main(int argc, char **argv) {
     }
 
 
+
     try {
         server.setup();
     } catch (GeneralException &e) {
@@ -126,7 +127,7 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    int n=0;
+    /*int n=0;
     int client_fd;
     try {
         client_fd=server.ServerAccept();
@@ -140,32 +141,70 @@ int main(int argc, char **argv) {
     for(int i=0;i<bucket_size;++i){
         serverBucket.bucket.push_back(0);
     }
-    serverBucket.client_fd=client_fd;
+    serverBucket.client_fd=client_fd;*/
 
-    while (n<100) {
-
-        if (client_fd > 0) {
-            pthread_t pId;
-            int ret;
-            //ret = pthread_create(&pId,NULL,handle,(void *)&client_fd);
-            ret = pthread_create(&pId,NULL,handle_prethread,(void *)&serverBucket);
-            if(ret != 0)
-            {
-                printf("create pthread error!\n");
-                exit(1);
+    if(argc==2) {
+        int client_fd=0;
+	try {
+                client_fd=server.ServerAccept();
             }
-            //std::thread th(handle,client_fd);
-            //th.detach();
-            pthread_join(pId,NULL);
-        }else{
-            std::cout<<"client poor communication"<<std::endl;
+            catch (GeneralException &e) {
+                std::cout << e.what() << std::endl;
+            }
+        struct server_bucket serverBucket;
+        serverBucket.bucket_size=bucket_size;
+        for(int i=0;i<bucket_size;++i){
+            serverBucket.bucket.push_back(0);
         }
-        n++;
-        std::cout<<"thread is "<<n<<std::endl;
-        if(n==100){
-            std::cout<<"finish"<<std::endl;
-            close(client_fd);
+        serverBucket.client_fd=client_fd;
+
+        while (true) {
+            
+
+            if (client_fd > 0) {
+                pthread_t pId;
+                int ret;
+                //ret = pthread_create(&pId,NULL,handle,(void *)&client_fd);
+                ret = pthread_create(&pId, NULL, handle_prethread, (void *) &serverBucket);
+                if (ret != 0) {
+                    printf("create pthread error!\n");
+                    exit(1);
+                }
+                //std::thread th(handle,client_fd);
+                //th.detach();
+                pthread_join(pId, NULL);
+            } else {
+                std::cout << "client poor communication" << std::endl;
+            }
+
+        }
+    }else if(argc==3){
+      const int thread_pool_size=300;//atoi(argv[2]);
+        pthread_t thread_pool[300];
+        int client_fd=0;
+	try {
+                client_fd=server.ServerAccept();
+            }
+            catch (GeneralException &e) {
+                std::cout << e.what() << std::endl;
+            }
+        struct server_bucket serverBucket;
+        serverBucket.bucket_size=bucket_size;
+        for(int i=0;i<bucket_size;++i){
+            serverBucket.bucket.push_back(0);
+        }
+        serverBucket.client_fd=client_fd;
+        for(int i=0;i<thread_pool_size;i++){
+            pthread_create(&thread_pool[i],NULL,handle_thread_pool,(void *) &serverBucket);
+        }
+        while (true) {
+            if (client_fd > 0) {
+                enqueue(client_fd);
+            } else {
+                std::cout << "client poor communication" << std::endl;
+            }
         }
     }
+
     return EXIT_SUCCESS;
 }

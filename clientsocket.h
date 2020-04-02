@@ -16,25 +16,23 @@
 #define BUFFER_SIZE 1024
 
 class ClientSocket {
-private:
+public:
     int socket_fd;  // listen on sock_fd, new connection on new_fd
-    struct addrinfo host_info;
-    struct addrinfo *host_info_list;
     const char *hostname;
     const char *port;
-
+    
 public:
     // constructor
-    ClientSocket(): socket_fd(-1), host_info_list(nullptr), hostname(nullptr), port(nullptr) {}
-    ClientSocket(const char * hostname, const char * port): socket_fd(-1), host_info_list(nullptr), \
+    ClientSocket(): socket_fd(-1), hostname(NULL), port(NULL) {}
+    ClientSocket(const char * hostname, const char * port): socket_fd(-1), \
     hostname(hostname), port(port) {}
     // destructor
     ~ClientSocket() {
         // free linked list that stores
-        // if (host_info_list != nullptr) {
+        // if (host_info_list != NULL) {
         //     freeaddrinfo(host_info_list);
         // }
-        freeSockAddrList(host_info_list);
+        // freeSockAddrList(host_info_list);
         // if error occurs
         // if (socket_fd == -1) {
         //     close(socket_fd);
@@ -57,8 +55,10 @@ public:
  */
 void ClientSocket::setUp(){
     // get address info
+    struct addrinfo host_info;
+    struct addrinfo * host_info_list = NULL;
     int status;
-    struct addrinfo * p;
+    struct addrinfo * p = NULL;
     memset(&host_info, 0, sizeof(host_info)); // zero out host info
     host_info.ai_family = AF_UNSPEC; // both IPv4 and IPv6
     host_info.ai_socktype = SOCK_STREAM; // TCP socket
@@ -84,6 +84,7 @@ void ClientSocket::setUp(){
         // create and connect socket both succeed or no address found
         break;
     }
+    freeSockAddrList(host_info_list);
     // check if no address found
     if (p == NULL) {
         closeSockfd(socket_fd);
