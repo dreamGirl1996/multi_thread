@@ -5,10 +5,10 @@
 # To choose number of buckets to 32, 128, 512, 2048, set NUM_BUCKETS to 1, 2, 3, 4 respectively
 NUM_REQUESTS="1024"
 VARIATION_TYPE="0"
-NUM_BUCKETS="1"
+NUM_BUCKETS="4"
 
 # print commands
-echo "scalability/scalaMain c $NUM_REQUESTS $VARIATION_TYPE $NUM_BUCKETS"
+# echo "../scalability/scalaMain c $NUM_REQUESTS $VARIATION_TYPE $NUM_BUCKETS"
 
 # run commands
-scalability/scalaMain c $NUM_REQUESTS $VARIATION_TYPE $NUM_BUCKETS
+../scalability/scalaMain c $NUM_REQUESTS $VARIATION_TYPE $NUM_BUCKETS

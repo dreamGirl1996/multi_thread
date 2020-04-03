@@ -2,7 +2,7 @@ version: '2'
 services:
     scalability:
         build: ./scalability
-        user: nobody
+        # user: root
         command: bash -c "bash runserver.sh"
         volumes:
             - ./scalability:/var/log/ersshw4
