@@ -17,7 +17,7 @@ bash runserver.sh
 
 to run server code. 
 
-You can adjust the thread strategy (thread per request, thread pool), bucket size, or CPU core number for the client by alternating the values of ```THREAD_FORM```, ```NUM_BUCKETS``` and ```NUM_CORES``` in ```runserver.sh```, respectively, whose instructions are written in ```runserver.sh```.
+You can adjust the thread strategy (thread per request, thread pool), bucket size, or CPU core number in the server side by alternating the values of ```THREAD_FORM```, ```NUM_BUCKETS``` and ```NUM_CORES``` in ```runserver.sh```, respectively, the instructions of how to modify the parameters are written in ```runserver.sh```.
 
 <!-- `s` stands for running server side code.
 
@@ -34,4 +34,4 @@ cd testing
 bash runclient.sh
 ```
 
-You can adjust the number of requests, variation type, or bucket size for the client by alternating the values of ```NUM_REQUESTS```, ```VARIATION_TYPE``` and ```NUM_BUCKETS``` in ```runclient.sh```, respectively, whose instructions are written in ```runclient.sh```.
+You can adjust the number of requests, variation type, or bucket size in the client side by alternating the values of ```NUM_REQUESTS```, ```VARIATION_TYPE``` and ```NUM_BUCKETS``` in ```runclient.sh```, respectively, the instructions of how to modify the parameters are written in ```runclient.sh```.
