@@ -1,4 +1,4 @@
-# Scalability (HW2 for ECE 568 ERSS 2020 Spring)
+# Scalability (HW4 for ECE 568 ERSS 2020 Spring)
 
 By Qing Lu, Chixiang Zhang, Yijun Mao
 
