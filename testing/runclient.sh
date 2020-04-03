@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # To define number of request, set NUM_REQUESTS
 # To choose delay variation type, set VARIATION_TYPE to 0 for small variation, 1 for large variation
 # To choose number of buckets to 32, 128, 512, 2048, set NUM_BUCKETS to 1, 2, 3, 4 respectively
